@@ -1,0 +1,31 @@
+# Node
+node_modules/
+.npm
+npm-debug.log*
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# PHP / Laravel
+vendor/
+.env
+storage/*.key
+database/*.sqlite
+
+# Android / iOS
+android/
+ios/
+*.apk
+*.aab
+*.app
+*.ipa
+
+# System
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+.temp/
