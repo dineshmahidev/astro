@@ -1,7 +1,7 @@
+import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -65,6 +65,7 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [appIsReady, setAppIsReady] = React.useState(false);
   const [loaded, error] = useFonts({
     'MuktaMalar-Regular': require('../assets/fonts/MuktaMalar-Regular.ttf'),
     'MuktaMalar-Bold': require('../assets/fonts/MuktaMalar-Bold.ttf'),
@@ -72,20 +73,44 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    async function prepare() {
+      console.log('RootLayout: Starting preparation (Auth check)...');
+      try {
+        await initializeToken();
+        console.log('RootLayout: Auth initialization completed.');
+      } catch (e) {
+        console.warn('RootLayout: Preparation failed:', e);
+      } finally {
+        setAppIsReady(true);
+        console.log('RootLayout: Set appIsReady = true');
+      }
+    }
+    prepare();
+
+    const timeout = setTimeout(() => {
+      console.log('SplashScreen: Failsafe hiding triggered after 5s');
+      SplashScreen.hideAsync().catch(() => {});
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    console.log(`RootLayout: Font state -> loaded: ${loaded}, error: ${error}`);
     if (loaded || error) {
-      SplashScreen.hideAsync();
+      console.log('SplashScreen: Hiding as fonts are processed');
+      SplashScreen.hideAsync().catch(err => {
+        console.warn('SplashScreen.hideAsync failed:', err);
+      });
     }
   }, [loaded, error]);
 
-  useEffect(() => {
-    initializeToken().catch(err => {
-      console.error('RootLayout: Auth initialization failed:', err);
-    });
-  }, []);
-
-  if (!loaded && !error) {
+  if (!loaded && !error && !appIsReady) {
+    console.log('RootLayout: Not ready yet, returning null...');
     return null;
   }
+
+  console.log('RootLayout: Rendering main app content...');
 
   return (
     <SafeAreaProvider>
