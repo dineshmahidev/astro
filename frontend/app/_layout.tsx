@@ -5,8 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
-// Prevent splash screen from hiding until fonts load
-SplashScreen.preventAutoHideAsync();
+// Auto-hide native splash screen instead of locking it, to reveal if the app is crashing
+// SplashScreen.preventAutoHideAsync();
 
 import React, { useEffect } from 'react';
 import { useColorScheme } from '@/hooks/use-color-scheme';
