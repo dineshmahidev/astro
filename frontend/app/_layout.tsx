@@ -2,8 +2,6 @@ import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 
 // Auto-hide native splash screen instead of locking it, to reveal if the app is crashing
 // SplashScreen.preventAutoHideAsync();
@@ -65,52 +63,25 @@ function AppContent() {
 }
 
 export default function RootLayout() {
-  const [appIsReady, setAppIsReady] = React.useState(false);
-  const [loaded, error] = useFonts({
-    'MuktaMalar-Regular': require('../assets/fonts/MuktaMalar-Regular.ttf'),
-    'MuktaMalar-Bold': require('../assets/fonts/MuktaMalar-Bold.ttf'),
-    'TamilFont': require('../assets/fonts/tamilfont.ttf'),
-  });
+  const [authReady, setAuthReady] = React.useState(false);
 
   useEffect(() => {
     async function prepare() {
-      console.log('RootLayout: Starting preparation (Auth check)...');
       try {
         await initializeToken();
-        console.log('RootLayout: Auth initialization completed.');
       } catch (e) {
-        console.warn('RootLayout: Preparation failed:', e);
+        console.warn('RootLayout: Auth initialization failed:', e);
       } finally {
-        setAppIsReady(true);
-        console.log('RootLayout: Set appIsReady = true');
+        setAuthReady(true);
       }
     }
     prepare();
-
-    const timeout = setTimeout(() => {
-      console.log('SplashScreen: Failsafe hiding triggered after 5s');
-      SplashScreen.hideAsync().catch(() => {});
-    }, 5000);
-
-    return () => clearTimeout(timeout);
   }, []);
 
-  useEffect(() => {
-    console.log(`RootLayout: Font state -> loaded: ${loaded}, error: ${error}`);
-    if (loaded || error) {
-      console.log('SplashScreen: Hiding as fonts are processed');
-      SplashScreen.hideAsync().catch(err => {
-        console.warn('SplashScreen.hideAsync failed:', err);
-      });
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error && !appIsReady) {
-    console.log('RootLayout: Not ready yet, returning null...');
+  // Reveal the app as soon as auth is checked, relying on native auto-hide for splash
+  if (!authReady) {
     return null;
   }
-
-  console.log('RootLayout: Rendering main app content...');
 
   return (
     <SafeAreaProvider>

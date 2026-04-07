@@ -11,8 +11,8 @@ export const Branding = {
 export const Fonts = {
   rounded: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
   mono: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  tamil: 'MuktaMalar-Regular',
-  tamilBold: 'MuktaMalar-Bold',
+  tamil: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  tamilBold: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
 };
 
 export const Colors: any = {
