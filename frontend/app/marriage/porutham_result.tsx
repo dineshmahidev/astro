@@ -86,7 +86,7 @@ export default function PoruthamResult() {
                 <body style="font-family: sans-serif; padding: 40px; background: #0d0304; color: #FFF;">
                     <div style="text-align: center; border: 2px solid #FFD56F; padding: 20px; border-radius: 15px;">
                         <h1 style="color: #FFD56F; margin: 0; font-size: 32px;">திருமணப் பொருத்தம்</h1>
-                        <p style="color: #AAA; font-size: 14px; margin-top: 5px;">Austro Astrology Services</p>
+                        <p style="color: #AAA; font-size: 14px; margin-top: 5px;">Astromind Astrology Services</p>
                     </div>
                     
                     <!-- USER DETAILS SIDE BY SIDE -->

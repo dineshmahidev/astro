@@ -1,8 +1,8 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = 'http://10.163.13.139:8000/api'; // Laravel Backend
-const PYTHON_API_URL = 'http://10.163.13.139:8001'; // Python Vision AI
+const API_URL = 'http://10.203.148.139:8000/api'; // Laravel Backend
+const PYTHON_API_URL = 'http://10.203.148.139:8001'; // Python Vision AI
 
 const api = axios.create({
   baseURL: API_URL,
@@ -15,13 +15,26 @@ const pythonapi = axios.create({
   baseURL: PYTHON_API_URL,
 });
 
+// Add a request interceptor to attach the token to every request
+api.interceptors.request.use(
+  async (config) => {
+    const token = await SecureStore.getItemAsync('auth_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
+      // Token expired or invalid - only clear if it's an actual auth error
       await SecureStore.deleteItemAsync('auth_token');
-      delete api.defaults.headers.common['Authorization'];
     }
     return Promise.reject(error);
   }
@@ -30,20 +43,14 @@ api.interceptors.response.use(
 export const setToken = async (token: string | null) => {
   if (token) {
     await SecureStore.setItemAsync('auth_token', token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
     await SecureStore.deleteItemAsync('auth_token');
-    delete api.defaults.headers.common['Authorization'];
   }
 };
 
 export const initializeToken = async () => {
   const token = await SecureStore.getItemAsync('auth_token');
-  if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return token;
-  }
-  return null;
+  return token;
 };
 
 export const authApi = {
@@ -135,6 +142,22 @@ export const walletApi = {
     },
     redeem: async () => {
         const response = await api.post('/wallet/redeem');
+        return response.data;
+    },
+    createOrder: async (amount: number) => {
+        const response = await api.post('/wallet/razorpay/order', { amount });
+        return response.data;
+    },
+    verifyPayment: async (paymentData: any) => {
+        const response = await api.post('/wallet/razorpay/verify', paymentData);
+        return response.data;
+    },
+    debit: async (amount: number) => {
+        const response = await api.post('/wallet/debit', { amount });
+        return response.data;
+    },
+    getHistory: async () => {
+        const response = await api.get('/wallet/history');
         return response.data;
     }
 };

@@ -3,9 +3,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { Branding, Colors } from '@/constants/theme';
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useI18n } from '@/hooks/use-i18n';
 
 export default function FutureTabs() {
   const { colorScheme } = useTheme();
+  const { t } = useI18n();
   
   return (
     <Tabs
@@ -19,7 +21,7 @@ export default function FutureTabs() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('home'),
           tabBarIconName: 'house.fill',
           tabBarIcon: ({ color }: { color: string }) => <IconSymbol name="house.fill" size={24} color={color} />,
         } as any}
@@ -27,7 +29,7 @@ export default function FutureTabs() {
       <Tabs.Screen
         name="predictions"
         options={{
-          title: 'Predict',
+          title: t('predict'),
           tabBarIconName: 'magic.wand.fill',
           tabBarIcon: ({ color }: { color: string }) => <IconSymbol name="magic.wand.fill" size={24} color={color} />,
         } as any}
@@ -35,7 +37,7 @@ export default function FutureTabs() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'AI Chat',
+          title: t('chat'),
           tabBarIconName: 'message.fill',
           tabBarIcon: ({ color }: { color: string }) => <IconSymbol name="message.fill" size={24} color={color} />,
         } as any}
@@ -43,7 +45,7 @@ export default function FutureTabs() {
       <Tabs.Screen
         name="palm"
         options={{
-          title: 'Palm',
+          title: t('palm'),
           tabBarIconName: 'hand.fill',
           tabBarIcon: ({ color }: { color: string }) => <IconSymbol name="hand.fill" size={24} color={color} />,
         } as any}
@@ -51,7 +53,7 @@ export default function FutureTabs() {
       <Tabs.Screen
         name="account"
         options={{
-          title: 'Account',
+          title: t('account'),
           tabBarIconName: 'person.fill',
           tabBarIcon: ({ color }: { color: string }) => <IconSymbol name="person.fill" size={24} color={color} />,
         } as any}

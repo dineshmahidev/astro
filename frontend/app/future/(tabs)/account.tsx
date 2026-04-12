@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Dimensions, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Dimensions, Switch, Platform, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +14,7 @@ import { authApi, setToken } from '@/services/api';
 import { Colors, Branding } from '@/constants/theme';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ExpoImage } from 'expo-image';
+import { useI18n } from '@/hooks/use-i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,19 @@ export default function FutureAccount() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [notifications, setNotifications] = useState(true);
+    const { locale, t, changeLanguage } = useI18n();
+    const [showLangModal, setShowLangModal] = useState(false);
+
+    const languages = [
+        { code: 'en', label: 'English', flag: '🇺🇸' },
+        { code: 'ta', label: 'தமிழ் (Tamil)', flag: '🇮🇳' },
+        { code: 'hi', label: 'हिंदी (Hindi)', flag: '🇮🇳' },
+    ];
+
+    const pickLanguage = (code: any) => {
+        changeLanguage(code);
+        setShowLangModal(false);
+    };
 
     const fetchProfile = useCallback(async () => {
         try {
@@ -77,20 +91,51 @@ export default function FutureAccount() {
         <View style={styles.container}>
             <StatusBar style="light" />
             
-            <ScrollView 
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                <View style={styles.header}>
+            <View style={styles.header}>
                     <TouchableOpacity style={styles.walletBtn} onPress={() => router.push('/topup')}>
                         <Ionicons name="wallet-outline" size={18} color={Branding.gold} />
                         <Text style={styles.walletBalance}>₹ {profile?.wallet_balance || '0'}</Text>
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>COSMIC ARCHIVE</Text>
-                    <TouchableOpacity style={styles.settingsIcon} onPress={() => {}}>
-                        <Ionicons name="settings-outline" size={22} color={Branding.gold} />
+                    <Text style={styles.headerTitle}>{t('account_title')}</Text>
+                    <TouchableOpacity style={styles.settingsIcon} onPress={() => setShowLangModal(true)}>
+                        <Text style={{ fontSize: 20 }}>{languages.find(l => l.code === locale)?.flag || '🌐'}</Text>
+                        <Text style={styles.langBadge}>{locale.toUpperCase()}</Text>
                     </TouchableOpacity>
-                </View>
+            </View>
+
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+
+                {/* Language Modal */}
+                <Modal
+                    visible={showLangModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowLangModal(false)}
+                >
+                    <Pressable style={styles.modalOverlay} onPress={() => setShowLangModal(false)}>
+                        <View style={styles.langMenu}>
+                            <Text style={styles.menuTitle}>{t('language')}</Text>
+                            {languages.map((lang) => (
+                                <TouchableOpacity 
+                                    key={lang.code} 
+                                    style={[styles.langOption, locale === lang.code && styles.langOptionActive]}
+                                    onPress={() => pickLanguage(lang.code)}
+                                >
+                                    <Text style={styles.flagIcon}>{lang.flag}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.langLabel, locale === lang.code && styles.langLabelActive]}>{lang.label}</Text>
+                                    </View>
+                                    {locale === lang.code && (
+                                        <Ionicons name="checkmark-circle" size={20} color={Branding.gold} />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </Pressable>
+                </Modal>
 
                 {/* 2. AVATAR & INFO SECTION */}
                 <Animated.View entering={FadeInUp.delay(200).springify()} style={styles.profileSection}>
@@ -121,24 +166,6 @@ export default function FutureAccount() {
                     <Text style={styles.userEmail}>{profile?.email || 'user@astromai.com'}</Text>
                 </Animated.View>
 
-                {/* 2. PROMO BANNER */}
-                <Animated.View entering={FadeInDown.delay(300)} style={styles.bannerContainer}>
-                    <LinearGradient
-                        colors={[Branding.gold, '#B8860B']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.bannerCard}
-                    >
-                        <View style={styles.bannerIconBox}>
-                            <Ionicons name="gift" size={24} color={Branding.black} />
-                        </View>
-                        <View style={styles.bannerTextBox}>
-                            <Text style={styles.bannerSub}>Astro referral event</Text>
-                            <Text style={styles.bannerMain}>Get free prediction slots</Text>
-                        </View>
-                        <View style={styles.bannerDecoration} />
-                    </LinearGradient>
-                </Animated.View>
 
                 {/* 3. ACTION CHIPS */}
                 <View style={styles.chipsRow}>
@@ -151,14 +178,14 @@ export default function FutureAccount() {
                 <View style={styles.listContainer}>
                     <ListItem 
                         icon="bookmark-outline" 
-                        label="Bookmark" 
+                        label={t('settings')} 
                         badge="2" 
                         delay={700} 
                         onPress={() => {}}
                     />
                     <ListItem 
                         icon="notifications-outline" 
-                        label="Message Notification" 
+                        label={t('notifications')} 
                         hasSwitch 
                         switchValue={notifications}
                         onSwitchChange={setNotifications}
@@ -166,15 +193,15 @@ export default function FutureAccount() {
                     />
                     <ListItem 
                         icon="person-outline" 
-                        label="Personal Information" 
+                        label={t('profile_info')} 
                         delay={900} 
                         onPress={() => router.push('/edit-profile')}
                     />
                     <ListItem 
                         icon="card-outline" 
-                        label="Topup History" 
+                        label={t('history')} 
                         delay={1000} 
-                        onPress={() => router.push('/topup')}
+                        onPress={() => router.push('/topup-history')}
                     />
                     
                     <TouchableOpacity 
@@ -184,7 +211,7 @@ export default function FutureAccount() {
                             router.replace('/login');
                         }}
                     >
-                        <Text style={styles.logoutText}>Sign Out from Astro Mai</Text>
+                        <Text style={styles.logoutText}>{t('logout')}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
@@ -271,12 +298,67 @@ const styles = StyleSheet.create({
     },
     headerTitle: { color: Branding.gold, fontSize: 13, fontWeight: '900', letterSpacing: 3 },
     settingsIcon: {
-        width: 44,
+        width: 54,
         height: 44,
         borderRadius: 22,
         backgroundColor: 'rgba(255,255,255,0.05)',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 4
+    },
+    langBadge: {
+        color: Branding.gold,
+        fontSize: 10,
+        fontWeight: 'bold',
+        opacity: 0.8
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.8)',
         justifyContent: 'center',
         alignItems: 'center'
+    },
+    langMenu: {
+        width: width * 0.8,
+        backgroundColor: '#1A1A1A',
+        borderRadius: 30,
+        padding: 25,
+        borderWidth: 1,
+        borderColor: 'rgba(212,175,55,0.2)'
+    },
+    menuTitle: {
+        color: Branding.gold,
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center'
+    },
+    langOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 15,
+        marginBottom: 10,
+        backgroundColor: 'rgba(255,255,255,0.03)',
+        gap: 15
+    },
+    langOptionActive: {
+        backgroundColor: 'rgba(212,175,55,0.1)',
+        borderColor: 'rgba(212,175,55,0.3)',
+        borderWidth: 1
+    },
+    flagIcon: {
+        fontSize: 24
+    },
+    langLabel: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '600'
+    },
+    langLabelActive: {
+        color: Branding.gold,
+        fontWeight: 'bold'
     },
     profileSection: {
         alignItems: 'center',

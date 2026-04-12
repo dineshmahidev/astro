@@ -15,7 +15,7 @@ export default function MarriageScreen() {
         bride: { nakshatra_index: 5 }  // Thiruvathirai
       };
       
-      const response = await fetch('http://10.170.48.139:8000/api/match-horoscopes', {
+      const response = await fetch('http://10.203.148.139:8000/api/match-horoscopes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

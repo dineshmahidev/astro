@@ -14,7 +14,7 @@ import Animated, { FadeInDown, FadeInUp, FadeInRight, FadeOutLeft, Layout } from
 
 const { width } = Dimensions.get('window');
 
-const InputField = ({ label, icon, value, onChangeText, placeholder, secureTextEntry, showEye, onEyePress, keyboardType, autoCapitalize }: any) => (
+const InputField = ({ label, icon, value, onChangeText, placeholder, secureTextEntry, showEye, onEyePress, keyboardType, autoCapitalize, editable }: any) => (
   <View style={styles.inputContainer}>
     <Text style={[styles.label, { color: Branding.gold }]}>{label}</Text>
     <View style={[styles.inputWrapper, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(212, 175, 55, 0.2)' }]}>
@@ -28,6 +28,7 @@ const InputField = ({ label, icon, value, onChangeText, placeholder, secureTextE
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
+        editable={editable !== false}
       />
       {showEye && (
         <TouchableOpacity onPress={onEyePress} style={styles.eyeBtn}>
@@ -80,6 +81,7 @@ export default function RegisterScreen() {
   const [padam, setPadam] = useState<number | null>(null);
   const [profession, setProfession] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
 
   const { colorScheme } = useTheme();
   const themeColors = Colors[colorScheme];
@@ -131,6 +133,10 @@ export default function RegisterScreen() {
           setNakshatra(response.nakshatra);
           setPadam(response.padam);
           setStep(3); // Success Step
+          // AUTO NAVIGATE TO HOME AFTER 3 SECONDS
+          setTimeout(() => {
+              router.replace('/future/(tabs)');
+          }, 4000);
       } else {
           toastRef.current?.show('Registration failed', 'error');
       }
@@ -180,13 +186,18 @@ export default function RegisterScreen() {
           contentContainerStyle={styles.scrollContent} 
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          scrollEnabled={false}
         >
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <MaterialCommunityIcons name="star-shooting" size={40} color={Branding.gold} />
+              <Image 
+                source={require('@/assets/images/logo-astromind.png')} 
+                style={{ width: 80, height: 80, borderRadius: 40 }} 
+                resizeMode="contain"
+              />
               <View style={styles.logoGlow} />
             </View>
-            <Text style={styles.title}>Join Austro</Text>
+            <Text style={styles.title}>Join Astromind</Text>
             <Text style={styles.subtitle}>Step {step + 1} of 3</Text>
             <View style={styles.stepIndicator}>
                 {[0,1,2].map(i => (
@@ -229,6 +240,7 @@ export default function RegisterScreen() {
                         placeholder="vijay@example.com"
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        editable={!isGoogleUser}
                     />
 
                     <Text style={[styles.label, { color: Branding.gold, marginTop: 10 }]}>Select Gender</Text>
@@ -249,10 +261,26 @@ export default function RegisterScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.primaryBtn} onPress={nextStep}>
-                        <Text style={styles.primaryBtnText}>Continue</Text>
-                        <Ionicons name="arrow-forward" size={18} color={Branding.black} />
-                    </TouchableOpacity>
+                    <View style={styles.buttonRowNav}>
+                        <TouchableOpacity 
+                            onPress={() => {
+                                setIsGoogleUser(true);
+                                setEmail('google.user@gmail.com');
+                                setFirstName('Google');
+                                setLastName('User');
+                                toastRef.current?.show('Signed in with Google!', 'success');
+                                setTimeout(() => nextStep(), 1000);
+                            }} 
+                            style={[styles.googleBtn, { flex: 1, marginTop: 10, borderColor: Branding.gold }]}
+                        >
+                            <Ionicons name="logo-google" size={20} color={Branding.gold} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={[styles.primaryBtn, { flex: 2 }]} onPress={nextStep}>
+                            <Text style={styles.primaryBtnText}>Manual Next</Text>
+                            <Ionicons name="arrow-forward" size={18} color={Branding.black} />
+                        </TouchableOpacity>
+                    </View>
                 </Animated.View>
             )}
 
@@ -433,7 +461,7 @@ export default function RegisterScreen() {
                             
                             <View style={styles.successHorizontalDivider} />
                             
-                            <Text style={styles.successQuote}>"Your soul's blueprint is now etched into the stars of Austro. Guided by light, driven by destiny."</Text>
+                            <Text style={styles.successQuote}>"Your soul's blueprint is now etched into the stars of Astromind. Guided by light, driven by destiny."</Text>
                         </BlurView>
                     </View>
 
@@ -451,9 +479,9 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already part of Austro? </Text>
+            <Text style={styles.footerText}>Already part of Astromind? </Text>
             <TouchableOpacity onPress={() => router.replace('/login')}>
-              <Text style={styles.loginLink}>Login Here</Text>
+              <Text style={styles.loginLink}>Go to Login</Text>
             </TouchableOpacity>
           </View>
 
@@ -492,11 +520,11 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 25,
-    paddingTop: 60,
+    paddingTop: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 10,
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -548,21 +576,21 @@ const styles = StyleSheet.create({
     color: Branding.black,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.2)',
   },
   logoGlow: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Branding.gold,
     opacity: 0.1,
     zIndex: -1,
@@ -580,7 +608,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   formSection: {
-    marginBottom: 30,
+    marginBottom: 15,
   },
   sectionHeader: {
     fontSize: 12,
@@ -594,7 +622,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   label: {
     fontSize: 11,
@@ -626,7 +654,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   locationWrapper: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   manualSwitch: {
     flexDirection: 'row',
@@ -746,6 +774,37 @@ const styles = StyleSheet.create({
     color: Branding.gold,
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    color: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 15,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  googleBtn: {
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  googleBtnText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
   },
   successCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',

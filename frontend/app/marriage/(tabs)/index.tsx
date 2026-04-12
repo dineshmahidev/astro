@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Video, ResizeMode } from 'expo-av';
+import { useI18n } from '@/hooks/use-i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export default function MarriageHome() {
     const [data, setData] = useState<any>(null);
     const [pathIndex, setPathIndex] = useState(0);
     const [dailyImpacts, setDailyImpacts] = useState<any[]>([]);
+    const { t } = useI18n();
 
     useFocusEffect(
         useCallback(() => {
@@ -60,39 +62,40 @@ export default function MarriageHome() {
     return (
         <View style={styles.container}>
             <StatusBar style="light" />
+            {/* 1. TOP HEADER */}
+            <View style={[styles.headerRow, { paddingBottom: 10 }]}>
+                <TouchableOpacity style={styles.profileBox} onPress={() => router.push('/marriage/(tabs)/account')}>
+                    {data?.avatar_url ? (
+                        <Image 
+                            source={{ uri: data.avatar_url }} 
+                            style={styles.avatarImg} 
+                            contentFit="cover"
+                        />
+                    ) : (
+                        <LinearGradient colors={['#FFDEDE', '#FF6B6B']} style={styles.avatarPlaceholder}>
+                            <Ionicons name="heart" size={14} color={Branding.black} style={{ opacity: 0.1, position: 'absolute' }} />
+                            <Text style={styles.avatarInitial}>{data?.name?.charAt(0) || 'A'}</Text>
+                        </LinearGradient>
+                    )}
+                    <View style={styles.greetingBox}>
+                        <Text style={styles.greetingText}>Shubh Vivaah!</Text>
+                        <Text style={styles.userNameText}>{data?.name || 'Astro Seeker'}</Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.notificationBtn} onPress={() => router.push('/notifications')}>
+                    <Ionicons name="heart-outline" size={24} color="#FF6B6B" />
+                    <View style={styles.notificationDot} />
+                </TouchableOpacity>
+            </View>
+
             <ScrollView 
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* 1. TOP HEADER */}
-                <View style={styles.headerRow}>
-                    <TouchableOpacity style={styles.profileBox} onPress={() => router.push('/marriage/(tabs)/account')}>
-                        {data?.avatar_url ? (
-                            <Image 
-                                source={{ uri: data.avatar_url }} 
-                                style={styles.avatarImg} 
-                                contentFit="cover"
-                            />
-                        ) : (
-                            <LinearGradient colors={['#FFDEDE', '#FF6B6B']} style={styles.avatarPlaceholder}>
-                                <Ionicons name="heart" size={14} color={Branding.black} style={{ opacity: 0.1, position: 'absolute' }} />
-                                <Text style={styles.avatarInitial}>{data?.name?.charAt(0) || 'A'}</Text>
-                            </LinearGradient>
-                        )}
-                        <View style={styles.greetingBox}>
-                            <Text style={styles.greetingText}>Shubh Vivaah!</Text>
-                            <Text style={styles.userNameText}>{data?.name || 'Astro Seeker'}</Text>
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.notificationBtn} onPress={() => router.push('/notifications')}>
-                        <Ionicons name="heart-outline" size={24} color="#FF6B6B" />
-                        <View style={styles.notificationDot} />
-                    </TouchableOpacity>
-                </View>
 
                 {/* 2. DESTINY PATHS */}
-                <View style={{ marginTop: 10 }}>
-                    <Text style={[styles.sectionTitle, { paddingHorizontal: 25, marginBottom: 15 }]}>Continue Your Path</Text>
+                <View>
+                    <Text style={[styles.sectionTitle, { paddingHorizontal: 25, marginBottom: 15 }]}>{t('continue_path')}</Text>
                     <View>
                         <ScrollView 
                             horizontal 
@@ -109,10 +112,10 @@ export default function MarriageHome() {
                                     <Image source={require('@/assets/images/wizard-pic.png')} style={styles.pathVideo} contentFit="cover" />
                                     <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)']} style={styles.pathOverlay}>
                                         <View>
-                                            <Text style={styles.pathTitle}>My Future</Text>
-                                            <Text style={styles.pathSubtitle}>Predictions & Career</Text>
+                                            <Text style={styles.pathTitle}>{t('my_future')}</Text>
+                                            <Text style={styles.pathSubtitle}>{t('predictions_career')}</Text>
                                             <View style={styles.pathBtn}>
-                                                <Text style={styles.pathBtnText}>Explore</Text>
+                                                <Text style={styles.pathBtnText}>{t('explore')}</Text>
                                                 <Ionicons name="arrow-forward" size={12} color={Branding.black} />
                                             </View>
                                         </View>
@@ -125,10 +128,10 @@ export default function MarriageHome() {
                                     <Image source={require('@/assets/images/angel-pic.png')} style={styles.pathVideo} contentFit="cover" />
                                     <LinearGradient colors={['transparent', 'rgba(0,0,0,0.85)']} style={styles.pathOverlay}>
                                         <View>
-                                            <Text style={styles.pathTitle}>My Marriage</Text>
-                                            <Text style={styles.pathSubtitle}>Bond & Compatibility</Text>
+                                            <Text style={styles.pathTitle}>{t('my_marriage')}</Text>
+                                            <Text style={styles.pathSubtitle}>{t('bond_compatibility')}</Text>
                                             <View style={styles.pathBtn}>
-                                                <Text style={styles.pathBtnText}>Explore</Text>
+                                                <Text style={styles.pathBtnText}>{t('explore')}</Text>
                                                 <Ionicons name="arrow-forward" size={12} color={Branding.black} />
                                             </View>
                                         </View>
@@ -188,7 +191,7 @@ export default function MarriageHome() {
                             onPress={() => router.push('/nine-days')}
                         >
                             <LinearGradient colors={[Branding.gold, '#B8860B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.next9Inner}>
-                                <Text style={styles.next9Text}>View Next 9 Days Predictions</Text>
+                                <Text style={styles.next9Text}>{t('view_next_9_days')}</Text>
                                 <Ionicons name="chevron-forward" size={16} color={Branding.black} />
                             </LinearGradient>
                         </TouchableOpacity>
@@ -211,8 +214,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        backgroundColor: Branding.black
+        backgroundColor: Branding.black,
+        zIndex: 100
     },
     profileBox: { flexDirection: 'row', alignItems: 'center' },
     avatarImg: { width: 45, height: 45, borderRadius: 22.5, borderWidth: 1, borderColor: '#FF6B6B' },

@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -67,14 +68,19 @@ export default function LoginScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
         >
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <MaterialCommunityIcons name="star-shooting" size={40} color={Branding.gold} />
-              <View style={styles.logoGlow} />
-            </View>
+    <View style={styles.logoContainer}>
+      <Image 
+        source={require('@/assets/images/logo-astromind.png')} 
+        style={{ width: 80, height: 80, borderRadius: 40 }} 
+        resizeMode="contain"
+      />
+      <View style={styles.logoGlow} />
+    </View>
             <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue your celestial journey</Text>
+            <Text style={styles.subtitle}>Sign in to continue your celestial journey with Astromind</Text>
           </View>
 
           <View style={styles.form}>
@@ -116,7 +122,7 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => router.push('/forgot-password')}>
+            <TouchableOpacity style={styles.forgotBtn} onPress={() => toastRef.current?.show('Coming soon...', 'info')}>
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
@@ -141,6 +147,24 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity 
+            onPress={() => {
+              toastRef.current?.show('Redirecting to Google...', 'success');
+              // Mock: If new user -> router.push('/register'), if existing -> router.replace('/future/(tabs)')
+              setTimeout(() => router.push('/register'), 1500);
+            }} 
+            style={styles.googleBtn}
+          >
+            <Ionicons name="logo-google" size={20} color="white" />
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity onPress={onRegister}>
@@ -160,28 +184,28 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 25,
     justifyContent: 'center',
-    paddingTop: 40,
+    paddingTop: 10,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 50,
+    marginBottom: 10,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.2)',
   },
   logoGlow: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Branding.gold,
     opacity: 0.1,
     zIndex: -1,
@@ -200,10 +224,10 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   label: {
     color: Branding.gold,
@@ -252,7 +276,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 8,
-    marginTop: 20,
+    marginTop: 10,
   },
   loginBtn: {
     height: 60,
@@ -269,8 +293,8 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 40,
-    marginBottom: 20,
+    marginTop: 20,
+    marginBottom: 10,
   },
   footerText: {
     color: 'rgba(255,255,255,0.5)',
@@ -280,5 +304,36 @@ const styles = StyleSheet.create({
     color: Branding.gold,
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    color: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 15,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  googleBtn: {
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  googleBtnText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

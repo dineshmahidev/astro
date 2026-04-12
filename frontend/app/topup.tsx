@@ -6,19 +6,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { Branding } from '@/constants/theme';
-import { walletApi } from '@/services/api';
+import api, { walletApi } from '@/services/api';
+import RazorpayCheckout from 'react-native-razorpay';
+import { RewardedAd, RewardedAdEventType, TestIds, AdEventType } from 'react-native-google-mobile-ads';
 
 // REAL ADMOB IDs
 const REWARDED_AD_UNIT_ID = 'ca-app-pub-2141805169615611/6710193860';
-
-// Mocking library in case it's not installed/ready in development build
-let RewardedAd: any = null;
-try {
-    const AdMob = require('react-native-google-mobile-ads');
-    RewardedAd = AdMob.RewardedAd;
-} catch (e) {
-    console.log('Mobile Ads SDK not available in this environment');
-}
+const adUnitId = __DEV__ ? TestIds.REWARDED : REWARDED_AD_UNIT_ID;
 
 const { width } = Dimensions.get('window');
 const TOPUP_OPTIONS = [10, 20, 50, 100];
@@ -32,10 +26,71 @@ export default function TopupScreen() {
     const [isWatchingAd, setIsWatchingAd] = useState(false);
     const [balance, setBalance] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [adLoaded, setAdLoaded] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [rewardedAd, setRewardedAd] = useState<any>(null);
 
     useEffect(() => {
+        // Create the ad instance once
+        const adInstance = RewardedAd.createForAdRequest(adUnitId, {
+            requestNonPersonalizedAdsOnly: true,
+        });
+
+        const unsubscribeLoaded = adInstance.addAdEventListener(RewardedAdEventType.LOADED, () => {
+            console.log('MobileAds: Ad loaded successfully');
+            setAdLoaded(true);
+        });
+
+        const unsubscribeEarned = adInstance.addAdEventListener(
+            RewardedAdEventType.EARNED_REWARD,
+            async (reward) => {
+                console.log('MobileAds: User earned reward: ', reward);
+                try {
+                    const res = await walletApi.addReward();
+                    if (res.status === 'success') {
+                        setRewardProgress(res.reward_balance);
+                        Alert.alert('Cosmic Reward!', '₹2 successfully added to your divine account.');
+                    }
+                } catch (error) {
+                    console.error('API: Reward update failed:', error);
+                }
+            },
+        );
+
+        const unsubscribeClosed = adInstance.addAdEventListener(AdEventType.CLOSED, () => {
+            console.log('MobileAds: Ad closed by user');
+            setAdLoaded(false);
+            setIsWatchingAd(false);
+            adInstance.load(); // Preload next
+        });
+
+        const unsubscribeError = adInstance.addAdEventListener(AdEventType.ERROR, (error) => {
+            console.warn('MobileAds: Ad failed to load:', error);
+            setAdLoaded(false);
+            setIsWatchingAd(false);
+        });
+
+        adInstance.load();
+        setRewardedAd(adInstance);
         fetchBalance();
+        fetchUser();
+
+        return () => {
+            unsubscribeLoaded();
+            unsubscribeEarned();
+            unsubscribeClosed();
+            unsubscribeError();
+        };
     }, []);
+
+    const fetchUser = async () => {
+        try {
+            const res = await api.get('/user');
+            setUser(res.data);
+        } catch (e) {
+            console.log('Error fetching user for checkout');
+        }
+    };
 
     const fetchBalance = async () => {
         try {
@@ -52,36 +107,36 @@ export default function TopupScreen() {
         }
     };
 
+    const getAdButtonText = () => {
+        if (isWatchingAd) return 'Divine Loading...';
+        if (adLoaded) return 'Watch Divine Ad (EARN ₹2)';
+        return 'Waiting for Revelation...';
+    };
+
     const handleWatchAd = async () => {
+        console.log('User clicked Watch Ad. Current State - adLoaded:', adLoaded);
+
         if (rewardProgress >= 10) {
             Alert.alert('Threshold Reached', 'You have earned ₹10! Redeem for free divine access.');
             return;
         }
 
-        setIsWatchingAd(true);
-
-        // REAL INTEGRATION CHECK
-        if (RewardedAd) {
-            // Real AdMob Logic would go here
-            // const rewarded = RewardedAd.createForAdRequest(REWARDED_AD_UNIT_ID);
-            // rewarded.show();
-            // This requires native builds to test correctly.
+        if (!adLoaded || !rewardedAd) {
+            Alert.alert('Ad Loading', 'The divine revelation is fetching from the clouds. Give it 5 more seconds.');
+            rewardedAd?.load();
+            return;
         }
 
-        // Integrated Divine Timer Simulation
-        setTimeout(async () => {
-            try {
-                const res = await walletApi.addReward();
-                if (res.status === 'success') {
-                    setRewardProgress(res.reward_balance);
-                    Alert.alert('Reward Verified!', 'Divine Ads SDK: ₹2 Reward added to your cosmic account.');
-                }
-            } catch (error) {
-                 Alert.alert('Error', 'Connection to divine server lost.');
-            } finally {
-                setIsWatchingAd(false);
-            }
-        }, 5000);
+        try {
+            console.log('MobileAds: Calling rewardedAd.show()...');
+            setIsWatchingAd(true);
+            await rewardedAd.show();
+        } catch (error: any) {
+            console.error('MobileAds: Show failed:', error);
+            setIsWatchingAd(false);
+            setAdLoaded(false); 
+            rewardedAd?.load(); // Reload on failure
+        }
     };
 
     const handleRedeemReward = async () => {
@@ -103,22 +158,26 @@ export default function TopupScreen() {
 
     const handleTopup = async () => {
         const amount = selectedAmount || parseFloat(customAmount);
-        if (!amount || amount < 10 || amount > 100) {
-             Alert.alert('Invalid Divine Gift', 'Please select ₹10 - ₹100.');
+        if (!amount || amount < 10) {
+             Alert.alert('Invalid Divine Gift', 'Minimum recharge is ₹10.');
              return;
         }
-        try {
-            setLoading(true);
-            const res = await walletApi.topup(amount);
-            if (res.status === 'success') {
-                setBalance(res.new_balance);
-                Alert.alert('Success', `₹${amount} Added to Divine Wallet.`);
-            }
-        } catch (error) {
-            Alert.alert('Error', 'Payment processing failed.');
-        } finally {
-            setLoading(false);
+
+        // AS REQUESTED: Showing 'Coming Soon' and suggesting Ads instead
+        Alert.alert(
+            'Divine Feature Coming Soon!', 
+            'Razorpay payments are currently under heavenly maintenance. Please use "Watch Divine Ad" to earn wallet balance for free for now!',
+            [{ text: 'Got it!', onPress: () => console.log('User notified about Coming Soon') }]
+        );
+        
+        /* 
+        // RAZORPAY CODE BLOCKED UNTIL NEXT BUILD
+        if (!RazorpayCheckout) {
+            Alert.alert('Native Module Missing', 'Razorpay native SDK not found. Please rebuild your development APK.');
+            return;
         }
+        ...
+        */
     };
 
     if (loading && balance === 0) {
@@ -174,7 +233,7 @@ export default function TopupScreen() {
                             ) : (
                                 <>
                                     <Ionicons name="play" size={18} color={Branding.black} />
-                                    <Text style={styles.adBtnText}>Watch Reward Ad</Text>
+                                    <Text style={styles.adBtnText}>{getAdButtonText()}</Text>
                                 </>
                             )}
                         </TouchableOpacity>

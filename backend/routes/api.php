@@ -52,4 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wallet/topup', 'App\\Http\\Controllers\\WalletController@topup');
     Route::post('/wallet/reward', 'App\\Http\\Controllers\\WalletController@addReward');
     Route::post('/wallet/redeem', 'App\\Http\\Controllers\\WalletController@redeemReward');
+    Route::post('/wallet/razorpay/order', 'App\\Http\\Controllers\\WalletController@createRazorpayOrder');
+    Route::post('/wallet/razorpay/verify', 'App\\Http\\Controllers\\WalletController@verifyRazorpayPayment');
+    Route::post('/wallet/debit', 'App\\Http\\Controllers\\WalletController@debit');
 });
