@@ -10,7 +10,8 @@ import * as Sharing from 'expo-sharing';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
 import { useTheme } from '@/hooks/use-theme';
 import { Branding, Colors } from '@/constants/theme';
-import { authApi, palmApi } from '@/services/api';
+import { firebaseAuthApi, firebasePalmApi } from '@/services/firebase-api';
+import { palmApi } from '@/services/api';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,9 +24,9 @@ export default function MarriagePalmScreen() {
     React.useEffect(() => {
         const fetchUser = async () => {
             try {
-                const me = await authApi.getMe();
-                if (me && me.gender) {
-                    setUserGender(me.gender.toLowerCase() as any);
+                const me = await firebaseAuthApi.getMe();
+                if (me && (me as any).gender) {
+                    setUserGender((me as any).gender.toLowerCase() as any);
                 }
             } catch (e) {
                 console.log('Error fetching user for palm scan', e);
@@ -78,12 +79,12 @@ export default function MarriagePalmScreen() {
     const handlePalmResult = async (scanRes: any) => {
         try {
             setLoading(true);
-            const me = await authApi.getMe();
+            const me = await firebaseAuthApi.getMe();
             
             // 1. Integrated Python AI Processor
             const analysis = await palmApi.analyze({
                 capturedImage: scanRes.capturedImage,
-                user_id: me?.id
+                user_id: (me as any)?.uid || (me as any)?.id
             });
 
             if (analysis.success) {
@@ -96,6 +97,13 @@ export default function MarriagePalmScreen() {
                         heartLine: "அன்பு மற்றும் பாசம் நிறைந்த இதய ரேகை காணப்படுகிறது.",
                         marriageLine: "உன்னதமான வரன் மற்றும் மகிழ்ச்சியான இல்லறம் அமையும்."
                     }
+                });
+
+                // 2. Save to Firebase History
+                await firebasePalmApi.saveReading({
+                    type: 'marriage',
+                    analysis: analysis.insight,
+                    image_url: analysis.processed_image
                 });
             } else {
                 throw new Error(analysis.error || "Vision Clouded");

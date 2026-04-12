@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { authApi, horoscopeApi } from '@/services/api';
+import { firebaseAuthApi, firebaseHoroscopeApi } from '@/services/firebase-api';
 import { Branding } from '@/constants/theme';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,13 +37,13 @@ export default function MarriageHome() {
 
     const fetchHomeData = async () => {
         try {
-            const user = await authApi.getMe();
+            const user = await firebaseAuthApi.getMe();
             setData({
-                name: user.name || 'Astro Seeker',
-                avatar_url: user.avatar_url
+                name: (user as any)?.name || 'Astro Seeker',
+                avatar_url: (user as any)?.avatar_url
             });
-            const impacts = await horoscopeApi.getMyDailyImpacts();
-            setDailyImpacts(impacts);
+            const impacts: any = await firebaseHoroscopeApi.calculate({ type: 'daily' });
+            setDailyImpacts([]); // Reset or handle accordingly
         } catch (error) {
             console.error('Fetch home data error:', error);
         } finally {

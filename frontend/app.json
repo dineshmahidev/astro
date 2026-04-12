@@ -23,6 +23,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
       "package": "com.levelup.dev.frontend"
     },
     "web": {
@@ -41,7 +42,8 @@
           "androidAppId": "ca-app-pub-2141805169615611~1437251111",
           "iosAppId": "ca-app-pub-2141805169615611~1437251111"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true

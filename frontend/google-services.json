@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "279864039046",
+    "project_id": "astro-b79e9",
+    "storage_bucket": "astro-b79e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279864039046:android:3ffe6c00528e34a58be307",
+        "android_client_info": {
+          "package_name": "com.levelup.dev.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlB7VXNfGD7O_n2-VeQvdJTgAk5LjRw_0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

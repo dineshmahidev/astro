@@ -34,3 +34,36 @@ workflows:
           success: true
           failure: true
 
+  android-release-build:
+    name: Android Release Build (APK)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      node: 20
+      java: 17
+      android_signing:
+        - keystore_reference # Defined in Codemagic UI
+    scripts:
+      - name: Install dependencies
+        script: |
+          cd frontend
+          npm install
+      - name: Expo Prebuild
+        script: |
+          cd frontend
+          npm run prebuild -- --platform android
+      - name: Build Android Release APK
+        script: |
+          cd frontend/android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+    artifacts:
+      - frontend/android/app/build/outputs/apk/release/*.apk
+    publishing:
+      email:
+        recipients:
+          - dineshmahidev@gmail.com
+        notify:
+          success: true
+          failure: true
+

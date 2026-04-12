@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { authApi } from '@/services/api';
+import { firebaseAuthApi } from '@/services/firebase-api';
 import { Branding } from '@/constants/theme';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
@@ -45,17 +45,19 @@ export default function EditProfileScreen() {
 
     const fetchProfile = async () => {
         try {
-            const data = await authApi.getMe();
-            setProfile({
-                name: data.name || '',
-                profession: data.profession || '',
-                dob: data.dob || '',
-                tob: data.tob || '',
-                pob: data.pob || '',
-                lat: data.lat || '',
-                lng: data.lng || '',
-                avatar_url: data.avatar_url || ''
-            });
+            const data = await firebaseAuthApi.getMe();
+            if (data) {
+                setProfile({
+                    name: (data as any).name || '',
+                    profession: (data as any).profession || '',
+                    dob: (data as any).dob || '',
+                    tob: (data as any).tob || '',
+                    pob: (data as any).pob || '',
+                    lat: (data as any).lat || '',
+                    lng: (data as any).lng || '',
+                    avatar_url: (data as any).avatar_url || ''
+                });
+            }
         } catch (error: any) {
             console.error('Fetch profile error:', error);
         } finally {
@@ -66,7 +68,7 @@ export default function EditProfileScreen() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await authApi.updateProfile({
+            await firebaseAuthApi.updateProfile({
                 name: profile.name,
                 profession: profile.profession,
                 dob: profile.dob,

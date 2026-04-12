@@ -4,8 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
-import { authApi, setToken } from '@/services/api';
+import { firebaseAuthApi } from '@/services/firebase-api';
+import { setToken } from '@/services/api'; 
 import Toast, { ToastRef } from '@/components/Toast';
 import { useTheme } from '@/hooks/use-theme';
 import { Branding, Colors } from '@/constants/theme';
@@ -87,6 +89,39 @@ export default function RegisterScreen() {
   const themeColors = Colors[colorScheme];
   const router = useRouter();
 
+  React.useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '279864039046-bodorv4b614ldg3qo7aeojvjlrnu1jr2.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
+
+  const onGoogleRegister = async () => {
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
+      const userInfo: any = await GoogleSignin.signIn();
+      
+      const user = userInfo.data.user;
+      if (user) {
+        setFirstName(user.givenName || '');
+        setLastName(user.familyName || '');
+        setEmail(user.email || '');
+        setIsGoogleUser(true);
+        toastRef.current?.show(`Welcome ${user.name}! ✨`, 'success');
+        setTimeout(() => nextStep(), 1000);
+      }
+    } catch (error: any) {
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+            toastRef.current?.show('Sign in cancelled', 'info');
+        } else {
+            toastRef.current?.show(error.message || 'Google Sign-In failed', 'error');
+        }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onRegister = async () => {
     if (!accepted) {
         toastRef.current?.show('Please accept Terms & Conditions', 'error');
@@ -122,18 +157,11 @@ export default function RegisterScreen() {
         registrationData.nakshatra = nakshatra;
       }
 
-      const response = await authApi.register(registrationData);
-      if (response && response.status === 'success') {
-          // Success: Store token for immediate sync
-          if (response.token) {
-              await setToken(response.token);
-          }
-          // Store rasi and nak for the success screen
-          setRasi(response.rasi);
-          setNakshatra(response.nakshatra);
-          setPadam(response.padam);
-          setStep(3); // Success Step
-          // AUTO NAVIGATE TO HOME AFTER 3 SECONDS
+      const user = await firebaseAuthApi.register(registrationData);
+      if (user) {
+          // Success Step
+          setStep(3); 
+          // AUTO NAVIGATE TO HOME AFTER 4 SECONDS
           setTimeout(() => {
               router.replace('/future/(tabs)');
           }, 4000);
@@ -263,17 +291,15 @@ export default function RegisterScreen() {
 
                     <View style={styles.buttonRowNav}>
                         <TouchableOpacity 
-                            onPress={() => {
-                                setIsGoogleUser(true);
-                                setEmail('google.user@gmail.com');
-                                setFirstName('Google');
-                                setLastName('User');
-                                toastRef.current?.show('Signed in with Google!', 'success');
-                                setTimeout(() => nextStep(), 1000);
-                            }} 
+                            onPress={onGoogleRegister} 
                             style={[styles.googleBtn, { flex: 1, marginTop: 10, borderColor: Branding.gold }]}
+                            disabled={loading}
                         >
-                            <Ionicons name="logo-google" size={20} color={Branding.gold} />
+                            {loading ? (
+                                <ActivityIndicator color={Branding.gold} />
+                            ) : (
+                                <Ionicons name="logo-google" size={20} color={Branding.gold} />
+                            )}
                         </TouchableOpacity>
 
                         <TouchableOpacity style={[styles.primaryBtn, { flex: 2 }]} onPress={nextStep}>

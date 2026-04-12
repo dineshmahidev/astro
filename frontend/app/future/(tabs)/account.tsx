@@ -10,7 +10,10 @@ import Animated, {
     FadeInDown, 
     FadeInUp,
 } from 'react-native-reanimated';
-import { authApi, setToken } from '@/services/api';
+import { firebaseAuthApi } from '@/services/firebase-api';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/services/firebase';
+import { setToken } from '@/services/api'; 
 import { Colors, Branding } from '@/constants/theme';
 import * as ImagePicker from 'expo-image-picker';
 import { Image as ExpoImage } from 'expo-image';
@@ -40,7 +43,7 @@ export default function FutureAccount() {
 
     const fetchProfile = useCallback(async () => {
         try {
-            const data = await authApi.getMe();
+            const data = await firebaseAuthApi.getMe();
             setProfile(data);
         } catch (error) {
             console.error('Fetch profile error:', error);
@@ -69,7 +72,7 @@ export default function FutureAccount() {
                 const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
                 // Pessimistic update
                 setLoading(true);
-                await authApi.updateProfile({ avatar_url: base64Image });
+                await firebaseAuthApi.updateProfile({ avatar_url: base64Image });
                 await fetchProfile();
             }
         } catch (error) {
@@ -207,8 +210,8 @@ export default function FutureAccount() {
                     <TouchableOpacity 
                         style={styles.logoutBtn} 
                         onPress={async () => {
-                            await setToken(null);
-                            router.replace('/login');
+                            await signOut(auth);
+                            router.replace('/');
                         }}
                     >
                         <Text style={styles.logoutText}>{t('logout')}</Text>

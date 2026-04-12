@@ -6,7 +6,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { Branding } from '@/constants/theme';
-import api, { walletApi } from '@/services/api';
+import { firebaseAuthApi, firebaseWalletApi } from '@/services/firebase-api';
+import api from '@/services/api'; 
 import RazorpayCheckout from 'react-native-razorpay';
 import { RewardedAd, RewardedAdEventType, TestIds, AdEventType } from 'react-native-google-mobile-ads';
 
@@ -46,9 +47,9 @@ export default function TopupScreen() {
             async (reward) => {
                 console.log('MobileAds: User earned reward: ', reward);
                 try {
-                    const res = await walletApi.addReward();
+                    const res = await firebaseWalletApi.addReward();
                     if (res.status === 'success') {
-                        setRewardProgress(res.reward_balance);
+                        setRewardProgress(res.reward_balance || 0);
                         Alert.alert('Cosmic Reward!', '₹2 successfully added to your divine account.');
                     }
                 } catch (error) {
@@ -85,8 +86,8 @@ export default function TopupScreen() {
 
     const fetchUser = async () => {
         try {
-            const res = await api.get('/user');
-            setUser(res.data);
+            const data = await firebaseAuthApi.getMe();
+            setUser(data);
         } catch (e) {
             console.log('Error fetching user for checkout');
         }
@@ -95,10 +96,10 @@ export default function TopupScreen() {
     const fetchBalance = async () => {
         try {
             setLoading(true);
-            const res = await walletApi.getBalance();
-            if (res.status === 'success') {
-                setBalance(res.data.wallet_balance);
-                setRewardProgress(res.data.reward_balance);
+            const user: any = await firebaseAuthApi.getMe();
+            if (user) {
+                setBalance(user.wallet_balance || 0);
+                setRewardProgress(user.reward_balance || 0);
             }
         } catch (error) {
             console.error('Fetch balance error:', error);
@@ -143,9 +144,9 @@ export default function TopupScreen() {
         if (rewardProgress < 10) return;
         try {
             setLoading(true);
-            const res = await walletApi.redeem();
+            const res = await firebaseWalletApi.redeem();
             if (res.status === 'success') {
-                setBalance(res.new_balance);
+                setBalance(res.new_balance || 0);
                 setRewardProgress(0);
                 Alert.alert('Cosmic Blessing!', '₹10 added. 20 Minutes Free Divine Access granted!');
             }

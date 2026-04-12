@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, KeyboardAvoidingView, Platform, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { LucideSend, LucideBot, LucideUser, LucideSparkles, LucideClock, LucideLock } from 'lucide-react-native';
-import { aiApi, walletApi } from '@/services/api';
+import { firebaseAiApi, firebaseWalletApi } from '@/services/firebase-api';
 import { Branding } from '@/constants/theme';
 import { useRouter } from 'expo-router';
 
@@ -63,13 +63,9 @@ export default function ChatScreen() {
   const checkInitialState = async () => {
     try {
       setCheckingWallet(true);
-      const res = await walletApi.getBalance();
-      if (res.data.is_free_access_active) {
-        setIsSessionActive(true);
-        setTimeLeft(600); // 10 mins if free access
-      } else if (res.data.wallet_balance >= SESSION_PRICE) {
+      const balance = await firebaseWalletApi.getBalance();
+      if (balance >= SESSION_PRICE) {
         // Just show the button to start session if they have money
-        // We don't deduct automatically on open to avoid accidental charges
       }
     } catch (e) {
       console.error(e);
@@ -81,7 +77,7 @@ export default function ChatScreen() {
   const handlePayToContinue = async () => {
     try {
       setLoading(true);
-      const res = await walletApi.debit(SESSION_PRICE);
+      const res = await firebaseWalletApi.debit(SESSION_PRICE);
       if (res.status === 'success') {
         setIsSessionActive(true);
         setTimeLeft(SESSION_DURATION);
@@ -111,10 +107,10 @@ export default function ChatScreen() {
     setLoading(true);
 
     try {
-      const data = await aiApi.chat(currentInput);
+      const data = await firebaseAiApi.chat(currentInput);
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.reply || data.response,
+        text: data.response,
         sender: 'bot',
         timestamp: new Date()
       };

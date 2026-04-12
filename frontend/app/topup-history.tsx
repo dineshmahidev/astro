@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { walletApi } from '@/services/api';
+import { firebaseWalletApi } from '@/services/firebase-api';
 import { Branding } from '@/constants/theme';
 import { useI18n } from '@/hooks/use-i18n';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -23,10 +23,8 @@ export default function TopupHistory() {
 
     const fetchHistory = async () => {
         try {
-            const response = await walletApi.getHistory();
-            if (response.status === 'success') {
-                setHistory(response.data);
-            }
+            const data = await firebaseWalletApi.getHistory();
+            setHistory(data);
         } catch (error) {
             console.error('Fetch history error:', error);
             // Fallback mock data for demo if API fails

@@ -8,7 +8,9 @@ import { StatusBar } from 'expo-status-bar';
 
 import React, { useEffect } from 'react';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { initializeToken } from '@/services/api';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/services/firebase';
+import { initializeToken } from '@/services/api'; 
 
 export const unstable_settings = {
   anchor: 'index',
@@ -66,21 +68,23 @@ export default function RootLayout() {
   const [authReady, setAuthReady] = React.useState(false);
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        await initializeToken();
-      } catch (e) {
-        console.warn('RootLayout: Auth initialization failed:', e);
-      } finally {
-        setAuthReady(true);
-      }
-    }
-    prepare();
+    // 1. Check legacy token for backward compatibility
+    initializeToken();
+
+    // 2. Listen to Firebase Auth state
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthReady(true);
+    });
+
+    return unsubscribe;
   }, []);
 
-  // Reveal the app as soon as auth is checked, relying on native auto-hide for splash
   if (!authReady) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: Branding.black, justifyContent: 'center', alignItems: 'center' }}>
+        <StatusBar style="light" />
+      </View>
+    );
   }
 
   return (

@@ -12,9 +12,11 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { authApi, setToken } from '@/services/api';
+import { firebaseAuthApi } from '@/services/firebase-api';
+import { setToken } from '@/services/api'; 
 import Toast, { ToastRef } from '@/components/Toast';
 import { useTheme } from '@/hooks/use-theme';
 import { Branding, Colors } from '@/constants/theme';
@@ -29,6 +31,39 @@ export default function LoginScreen() {
   const toastRef = React.useRef<ToastRef>(null);
   const router = useRouter();
 
+  React.useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '279864039046-bodorv4b614ldg3qo7aeojvjlrnu1jr2.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
+
+  const onGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
+      const userInfo: any = await GoogleSignin.signIn();
+      
+      const idToken = userInfo.data.idToken;
+      if (!idToken) throw new Error('No ID Token found');
+
+      const user = await firebaseAuthApi.googleLogin(idToken);
+      toastRef.current?.show(`Welcome ${user.displayName || 'Star Traveler'}! ✨`, 'success');
+      
+      setTimeout(() => {
+        router.replace('/future/(tabs)');
+      }, 1000);
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        toastRef.current?.show('Sign in cancelled', 'info');
+      } else {
+        toastRef.current?.show(error.message || 'Google Sign-In failed', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onLogin = async () => {
     if (!email || !password) {
       toastRef.current?.show('Please enter both email and password', 'error');
@@ -36,8 +71,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const response = await authApi.login({ email, password });
-      await setToken(response.token);
+      const user = await firebaseAuthApi.login(email, password);
       toastRef.current?.show('Welcome back! ✨', 'success');
       setTimeout(() => {
         router.replace('/future/(tabs)');
@@ -154,15 +188,18 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity 
-            onPress={() => {
-              toastRef.current?.show('Redirecting to Google...', 'success');
-              // Mock: If new user -> router.push('/register'), if existing -> router.replace('/future/(tabs)')
-              setTimeout(() => router.push('/register'), 1500);
-            }} 
+            onPress={onGoogleLogin} 
             style={styles.googleBtn}
+            disabled={loading}
           >
-            <Ionicons name="logo-google" size={20} color="white" />
-            <Text style={styles.googleBtnText}>Continue with Google</Text>
+            {loading ? (
+                <ActivityIndicator color="white" />
+            ) : (
+                <>
+                    <Ionicons name="logo-google" size={20} color="white" />
+                    <Text style={styles.googleBtnText}>Continue with Google</Text>
+                </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.footer}>

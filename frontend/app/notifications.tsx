@@ -6,7 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Branding } from '@/constants/theme';
-import { notificationApi } from '@/services/api';
+import { firebaseNotificationApi } from '@/services/firebase-api';
 
 export default function NotificationsScreen() {
     const router = useRouter();
@@ -22,10 +22,8 @@ export default function NotificationsScreen() {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
-            const res = await notificationApi.getAll();
-            if (res.status === 'success') {
-                setNotifications(res.data);
-            }
+            const data = await firebaseNotificationApi.getAll();
+            setNotifications(data);
         } catch (error) {
             console.error('Fetch notifications error:', error);
         } finally {
@@ -36,17 +34,17 @@ export default function NotificationsScreen() {
 
     const handleMarkAllRead = async () => {
         try {
-            await notificationApi.markAllAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
+            await firebaseNotificationApi.markAllAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         } catch (error) {
             console.error('Mark all read error:', error);
         }
     };
 
-    const handleMarkRead = async (id: number) => {
+    const handleMarkRead = async (id: string) => {
         try {
-            await notificationApi.markAsRead(id);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+            await firebaseNotificationApi.markAsRead(id);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
         } catch (error) {
             console.error('Mark read error:', error);
         }

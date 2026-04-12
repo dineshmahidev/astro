@@ -3,7 +3,8 @@ import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import PalmScanner from '@/components/PalmScanner';
 import { Colors, Branding } from '@/constants/theme';
 import { useRouter } from 'expo-router';
-import { authApi, palmApi } from '@/services/api';
+import { firebaseAuthApi, firebasePalmApi } from '@/services/firebase-api';
+import { palmApi } from '@/services/api';
 
 export default function FuturePalm() {
     const router = useRouter();
@@ -11,7 +12,7 @@ export default function FuturePalm() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        authApi.getMe().then(setUser).catch(console.error);
+        firebaseAuthApi.getMe().then(setUser).catch(console.error);
     }, []);
 
     const handleResult = async (res: any) => {
@@ -35,6 +36,12 @@ export default function FuturePalm() {
                     heartLine: pyAnalysis.heart,
                     headLine: pyAnalysis.head
                 };
+
+                // 3. Save to Firebase History
+                await firebasePalmApi.saveReading({
+                    analysis: resultData,
+                    image_url: analysis.processed_image
+                });
 
                 router.push({
                     pathname: '/palm/result',
