@@ -1,24 +1,57 @@
 workflows:
-  android-development-build:
-    name: Android Development Build (APK)
+  android-release-build:
+    name: Android Release Build (Signed APK)
     max_build_duration: 60
-    instance_type: mac_mini_m2
-    # working_directory: frontend # Removed top-level working_directory as it can lead to path resolution issues in some tools
+    instance_type: mac_mini_m1
     environment:
       node: 20
       java: 17
-      # groups:
-      #   - ad_credentials # Uncomment this once you've defined it in the Codemagic UI
+      # IMPORTANT: Define these in Codemagic Environment Variables
+      # FINGERPRINT: Your signing fingerprint
+      groups:
+        - signing # Create a group 'signing' in Codemagic UI and add your keystore/passwords
     scripts:
       - name: Install dependencies
         script: |
           cd frontend
           npm install
-          npx expo install --fix
       - name: Expo Prebuild
         script: |
           cd frontend
-          npm run prebuild -- --platform android
+          # This generates the native android folder with your firebase config
+          npx expo prebuild --platform android --no-install
+      - name: Build Android Release APK
+        script: |
+          cd frontend/android
+          chmod +x gradlew
+          # This builds the final signed production APK
+          ./gradlew assembleRelease
+    artifacts:
+      - frontend/android/app/build/outputs/apk/release/*.apk
+    publishing:
+      email:
+        recipients:
+          - dineshmahidev@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  android-development-build:
+    name: Android Development Build (Debug APK)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      node: 20
+      java: 17
+    scripts:
+      - name: Install dependencies
+        script: |
+          cd frontend
+          npm install
+      - name: Expo Prebuild
+        script: |
+          cd frontend
+          npx expo prebuild --platform android --no-install
       - name: Build Android Debug APK
         script: |
           cd frontend/android
@@ -33,37 +66,3 @@ workflows:
         notify:
           success: true
           failure: true
-
-  android-release-build:
-    name: Android Release Build (APK)
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-    environment:
-      node: 20
-      java: 17
-      android_signing:
-        - keystore_reference # Defined in Codemagic UI
-    scripts:
-      - name: Install dependencies
-        script: |
-          cd frontend
-          npm install
-      - name: Expo Prebuild
-        script: |
-          cd frontend
-          npm run prebuild -- --platform android
-      - name: Build Android Release APK
-        script: |
-          cd frontend/android
-          chmod +x gradlew
-          ./gradlew assembleRelease
-    artifacts:
-      - frontend/android/app/build/outputs/apk/release/*.apk
-    publishing:
-      email:
-        recipients:
-          - dineshmahidev@gmail.com
-        notify:
-          success: true
-          failure: true
-
