@@ -4,7 +4,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+let GoogleSignin: any;
+let statusCodes: any;
+try {
+  const GoogleModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = GoogleModule.GoogleSignin;
+  statusCodes = GoogleModule.statusCodes;
+} catch (e) {
+  GoogleSignin = {
+    configure: () => {},
+    hasPlayServices: () => Promise.resolve(false),
+    signIn: () => Promise.reject(new Error('Google Sign-In not available in this build')),
+  };
+  statusCodes = {};
+}
 
 import { firebaseAuthApi } from '@/services/firebase-api';
 import { setToken } from '@/services/api'; 

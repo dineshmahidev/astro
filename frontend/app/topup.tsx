@@ -8,8 +8,28 @@ import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanim
 import { Branding } from '@/constants/theme';
 import { firebaseAuthApi, firebaseWalletApi } from '@/services/firebase-api';
 import api from '@/services/api'; 
-import RazorpayCheckout from 'react-native-razorpay';
-import { RewardedAd, RewardedAdEventType, TestIds, AdEventType } from 'react-native-google-mobile-ads';
+let RazorpayCheckout: any;
+try {
+    RazorpayCheckout = require('react-native-razorpay').default;
+} catch (e) {
+    RazorpayCheckout = null;
+}
+let RewardedAd: any;
+let RewardedAdEventType: any;
+let TestIds: any;
+let AdEventType: any;
+try {
+    const MobileAds = require('react-native-google-mobile-ads');
+    RewardedAd = MobileAds.RewardedAd;
+    RewardedAdEventType = MobileAds.RewardedAdEventType;
+    TestIds = MobileAds.TestIds;
+    AdEventType = MobileAds.AdEventType;
+} catch (e) {
+    RewardedAd = { createForAdRequest: () => ({ load: () => {}, addAdEventListener: () => () => {} }) };
+    RewardedAdEventType = {};
+    TestIds = { REWARDED: 'test' };
+    AdEventType = {};
+}
 
 // REAL ADMOB IDs
 const REWARDED_AD_UNIT_ID = 'ca-app-pub-2141805169615611/6710193860';
