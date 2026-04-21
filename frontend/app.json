@@ -2,7 +2,7 @@
   "expo": {
     "name": "Astromind",
     "slug": "astromind",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon-astro-tamil.png",
     "scheme": "frontend",
@@ -24,7 +24,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "package": "com.levelup.dev.frontend"
+      "package": "com.levelup.dev.frontend",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
